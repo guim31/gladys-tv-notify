@@ -1,41 +1,24 @@
 // -----------------------------------------------------------------------------
-// Scene actions (SDK v0.14+, Gladys 5.1+).
+// Scene action (manifest `scene_actions`, Gladys 5.1+).
 //
-// A scene action is an OPERATION a scene author places in a scene, with
-// parameters and a result: "identify this device", "take a snapshot", "clean
-// these rooms". Each one is declared in the manifest `scene_actions` field
-// (key, label, `fields` in the config_schema grammar, scalar `outputs`) and
-// handled here, keyed by that same `key`; index.js registers every entry with
-// `gladys.onSceneAction(key, ...)`.
+// - show_notification: shows a notification on a TV — title and message (scene
+//   variables allowed), duration, position, background color, transparency,
+//   icon, and a picture downloaded from a URL (a camera's snapshot). The
+//   doorbell rings → the visitor's picture appears over the film.
 //
-// Scene TRIGGERS are the other direction ("this happened"): they are fired by
-// the device that observes the event, see src/devices/motionSensor.js.
+// A TV that is off is not an error: the action resolves `sent: 0`, so the
+// scene can go on with "Continue only if" and warn a phone instead. Only a
+// wrong device or an empty notification fail the action.
 //
-// The rules that matter:
-//   - `fields` arrive RESOLVED: scene variables substituted, defaults applied,
-//     validated by the core; a `"source": "devices"` field is the chosen
-//     device external_id;
-//   - resolve an object of the declared `outputs` (scalars only), readable by
-//     the following actions of the scene, or `undefined` for none. Keys not
-//     declared in the manifest are dropped by the core;
-//   - throwing fails THIS action only: the scene logs it and continues. A
-//     scene action is never a condition: return an output and let the scene
-//     author gate on it;
-//   - never fire a scene event as a consequence of a received action: a scene
-//     bound to that event would loop through the integration.
+// Outputs are numbers (1/0), not booleans: the core's "Continue only if"
+// compares with ===, and its value field only produces numbers and strings,
+// so a boolean output could never be matched (Gladys 5.2.0).
 // -----------------------------------------------------------------------------
 
-import { createLogger } from '@gladysassistant/integration-sdk';
-import { signalDevice } from './devices/index.js';
-
-const logger = createLogger({ name: 'scenes' });
-
 export const SCENE_ACTIONS = {
-  // The ack is awaited under the action's `timeout_seconds` (15 s in the
-  // manifest), counted from the moment the scene reaches the action.
-  async identify_device(gladys, { fields, config }) {
-    logger.info(`Scene action identify_device <- ${fields.device}`);
-    const signalled = await signalDevice(gladys, fields.device, config);
-    return { signalled };
+  async show_notification(monitor, { fields }) {
+    const tv = monitor.tvOfDevice(fields.device);
+    const result = await monitor.notify(tv, fields);
+    return { sent: result.sent ? 1 : 0 };
   },
 };

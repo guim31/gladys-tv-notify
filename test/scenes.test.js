@@ -1,93 +1,146 @@
+// -----------------------------------------------------------------------------
+// The scene action `show_notification`, end to end: the core relays the
+// resolved fields, the container downloads the camera snapshot and shows the
+// notification on each kind of app (fake TVs on the loopback interface).
+// -----------------------------------------------------------------------------
+
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
-import { createFakeGladys } from '@gladysassistant/integration-sdk/testing';
-import { DEVICE_BLUEPRINTS } from '../src/devices/index.js';
-import { MOTION_DETECTED_TRIGGER, motionSensor } from '../src/devices/motionSensor.js';
-import { SCENE_ACTIONS } from '../src/scenes.js';
-import { normalizeConfig } from '../src/config.js';
+import { ICONS } from '../src/icons.js';
+import { SNAPSHOT, createFakeCamera, createFakeTv } from './helpers/fakeTv.js';
+import { addAndCreate, createWorld, reachableId } from './helpers/world.js';
 
-const manifest = JSON.parse(
-  await readFile(new URL('../gladys-assistant-integration.json', import.meta.url), 'utf8'),
-);
-const config = normalizeConfig();
+async function setup(t, app, { config } = {}) {
+  const tv = await createFakeTv(app);
+  t.after(() => tv.stop());
+  const world = await createWorld({ config });
+  t.after(() => world.app.stop());
+  const device = await addAndCreate(world, tv.fields());
+  return { world, tv, device };
+}
 
-const declarationOf = (list, key) => manifest[list].find((entry) => entry.key === key);
-const keysOf = (list) => (list ?? []).map((entry) => entry.key);
-const deviceIdOf = (gladys, key) =>
-  DEVICE_BLUEPRINTS.find((bp) => bp.key === key).deviceExternalId(gladys);
-
-// Let the async interval callback run to completion.
-const flush = () => new Promise((resolve) => setImmediate(resolve));
-
-test('the motion sensor fires one motion_detected event per detection, none on the clear', async (t) => {
-  t.mock.timers.enable({ apis: ['setInterval', 'setTimeout'] });
-  const gladys = createFakeGladys();
-  const stopPush = motionSensor.startPush(gladys, config);
-  try {
-    t.mock.timers.tick(60_000);
-    await flush();
-    assert.equal(gladys.fake.sceneEvents.length, 1, 'one detection, one event');
-    assert.equal(gladys.fake.sceneEvents[0].key, MOTION_DETECTED_TRIGGER);
-    assert.equal(gladys.fake.states.at(-1).state, 1, 'the state is still published');
-
-    t.mock.timers.tick(10_000);
-    await flush();
-    assert.equal(gladys.fake.states.at(-1).state, 0, 'the detection is cleared');
-    assert.equal(gladys.fake.sceneEvents.length, 1, 'the clear fires no event');
-  } finally {
-    stopPush();
-  }
+// The fields as the core sends them: rendered variables, defaults applied.
+const doorbell = (device, imageUrl) => ({
+  device: device.external_id,
+  title: 'Sonnette',
+  message: "Quelqu'un sonne à la porte (18:42)",
+  duration: 30,
+  position: 'top_right',
+  color: 'indigo',
+  transparency: '0',
+  icon: 'doorbell',
+  ...(imageUrl ? { image_url: imageUrl } : {}),
 });
 
-test('motion_detected data only carries keys the trigger declares', async (t) => {
-  t.mock.timers.enable({ apis: ['setInterval', 'setTimeout'] });
-  const gladys = createFakeGladys();
-  const stopPush = motionSensor.startPush(gladys, config);
-  try {
-    t.mock.timers.tick(60_000);
-    await flush();
-  } finally {
-    stopPush();
-  }
-  const [{ data }] = gladys.fake.sceneEvents;
-  const trigger = declarationOf('scene_triggers', MOTION_DETECTED_TRIGGER);
-  // The core keeps the `fields` keys (filters) and the `variables` keys
-  // (exposed to the scene): any other key would be silently dropped.
-  const declared = [...keysOf(trigger.fields), ...keysOf(trigger.variables)];
-  for (const [key, value] of Object.entries(data)) {
-    assert.ok(declared.includes(key), `data.${key} is not declared, the core would drop it`);
-    assert.ok(value === null || typeof value !== 'object', `data.${key} must be a primitive`);
-  }
-  // A `"source": "devices"` filter stores a device external_id.
-  assert.equal(data.device, deviceIdOf(gladys, 'motion-sensor'));
-  const targets = trigger.fields.find((field) => field.key === 'target').options;
-  assert.ok(
-    targets.some((option) => option.value === data.target),
-    `data.target "${data.target}" must be one of the filter options`,
+test('doorbell → the visitor on the TV: Notifications for Android TV', async (t) => {
+  const { world, tv, device } = await setup(t, 'nfandroidtv');
+  const cam = await createFakeCamera({ auth: 'digest' });
+  t.after(() => cam.stop());
+  const ack = await world.fake.sceneAction(
+    'show_notification',
+    doorbell(device, cam.url('/snapshot.jpg', 'viewer:s3cret-pass')),
   );
+  assert.deepEqual(ack, { success: true, data: { outputs: { sent: 1 } } });
+  const [shown] = tv.notifications;
+  assert.equal(shown.fields.title, 'Sonnette');
+  assert.equal(shown.fields.msg, "Quelqu'un sonne à la porte (18:42)");
+  assert.equal(shown.fields.duration, '30');
+  assert.equal(shown.fields.position, '2');
+  assert.equal(shown.fields.bkgcolor, '#303F9F');
+  assert.ok(shown.files.filename.data.equals(Buffer.from(ICONS.doorbell.png, 'base64')));
+  assert.ok(shown.files.filename2.data.equals(SNAPSHOT));
 });
 
-test('identify_device signals the chosen device and returns the declared outputs', async () => {
-  const gladys = createFakeGladys();
-  const outputs = await SCENE_ACTIONS.identify_device(gladys, {
-    fields: { device: deviceIdOf(gladys, 'light') },
-    config,
-  });
-  assert.deepEqual(outputs, { signalled: true });
-  const declared = keysOf(declarationOf('scene_actions', 'identify_device').outputs);
-  for (const key of Object.keys(outputs)) {
-    assert.ok(declared.includes(key), `output "${key}" is not declared, the core would drop it`);
-  }
+test('doorbell → the visitor on the TV: PiPup', async (t) => {
+  const { world, tv, device } = await setup(t, 'pipup');
+  const cam = await createFakeCamera();
+  t.after(() => cam.stop());
+  const ack = await world.fake.sceneAction('show_notification', doorbell(device, cam.url()));
+  assert.equal(ack.data.outputs.sent, 1);
+  const [shown] = tv.notifications;
+  assert.equal(shown.path, '/notify');
+  assert.equal(shown.fields.title, 'Sonnette');
+  assert.equal(shown.fields.position, '0');
+  assert.ok(shown.files.image.data.equals(SNAPSHOT));
 });
 
-test('identify_device reports a device that cannot signal itself through its output', async () => {
-  // Not a failure: a scene action is never a condition, the scene author
-  // gates the following actions on the output instead.
-  const gladys = createFakeGladys();
-  const outputs = await SCENE_ACTIONS.identify_device(gladys, {
-    fields: { device: deviceIdOf(gladys, 'weather-station') },
-    config,
+test('doorbell → the visitor on the TV: TvOverlay', async (t) => {
+  const { world, tv, device } = await setup(t, 'tvoverlay');
+  const cam = await createFakeCamera({ auth: 'basic' });
+  t.after(() => cam.stop());
+  const ack = await world.fake.sceneAction(
+    'show_notification',
+    doorbell(device, cam.url('/snapshot.jpg', 'viewer:s3cret-pass')),
+  );
+  assert.equal(ack.data.outputs.sent, 1);
+  const [shown] = tv.notifications;
+  assert.equal(shown.json.corner, 'top_end');
+  assert.equal(shown.json.largeIcon, 'mdi:doorbell');
+  assert.ok(Buffer.from(shown.json.image, 'base64').equals(SNAPSHOT));
+});
+
+test('a picture that cannot be downloaded: the notification is shown without it', async (t) => {
+  const { world, tv, device } = await setup(t, 'nfandroidtv');
+  const cam = await createFakeCamera({ auth: 'basic' });
+  t.after(() => cam.stop());
+  const ack = await world.fake.sceneAction(
+    'show_notification',
+    doorbell(device, cam.url('/snapshot.jpg', 'viewer:wrong')),
+  );
+  assert.equal(ack.data.outputs.sent, 1);
+  assert.equal(tv.notifications.length, 1);
+  assert.equal(tv.notifications[0].files.filename2, undefined);
+});
+
+test('a TV that is off: sent = 0, the scene goes on, the state follows', async (t) => {
+  const { world, tv, device } = await setup(t, 'tvoverlay', { config: { offline_after: '0' } });
+  await tv.stop();
+  const ack = await world.fake.sceneAction('show_notification', {
+    device: device.external_id,
+    message: 'Dinner is ready',
   });
-  assert.deepEqual(outputs, { signalled: false });
+  assert.deepEqual(ack, { success: true, data: { outputs: { sent: 0 } } });
+  assert.equal(world.fake.lastState(reachableId(device)), 0);
+  await tv.start();
+  const back = await world.fake.sceneAction('show_notification', {
+    device: device.external_id,
+    message: 'Dinner is ready',
+  });
+  assert.equal(back.data.outputs.sent, 1);
+  assert.equal(world.fake.lastState(reachableId(device)), 1);
+});
+
+test('an app answering an error: sent = 0', async (t) => {
+  const { world, tv, device } = await setup(t, 'pipup');
+  tv.forceStatus = 400;
+  const ack = await world.fake.sceneAction('show_notification', {
+    device: device.external_id,
+    message: 'x',
+  });
+  assert.equal(ack.data.outputs.sent, 0);
+});
+
+test('a device of another integration or an empty notification fail the action', async (t) => {
+  const { world, device } = await setup(t, 'pipup', { config: { language: 'en' } });
+  const foreign = await world.fake.sceneAction('show_notification', {
+    device: 'ext:other:tv:abc',
+    message: 'x',
+  });
+  assert.equal(foreign.success, false);
+  assert.match(foreign.error, /not a TV of the Notifications Android\/Fire TV integration/);
+  const empty = await world.fake.sceneAction('show_notification', {
+    device: device.external_id,
+    message: '   ',
+  });
+  assert.equal(empty.success, false);
+  assert.match(empty.error, /neither a title nor a message/);
+});
+
+test('the error of a failed action follows the language of the configuration', async (t) => {
+  const { world } = await setup(t, 'pipup', { config: { language: 'es' } });
+  const ack = await world.fake.sceneAction('show_notification', {
+    device: 'ext:other:tv:abc',
+    message: 'x',
+  });
+  assert.match(ack.error, /no es un televisor/);
 });

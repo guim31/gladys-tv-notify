@@ -1,0 +1,39 @@
+{
+  "source": "home-assistant/core 2021.1.0, homeassistant/components/nfandroidtv/notify.py (Apache-2.0)",
+  "method": "POST",
+  "url": "http://<tv>:7676",
+  "encoding": "multipart/form-data (requests files=payload)",
+  "payload_keys": [
+    "filename",
+    "type",
+    "title",
+    "msg",
+    "duration",
+    "fontsize",
+    "position",
+    "bkgcolor",
+    "transparency",
+    "offset",
+    "app",
+    "force",
+    "interrupt"
+  ],
+  "constants": { "type": "0", "offset": "0", "force": "true" },
+  "icon_part": { "name": "filename", "filename": "icon.png", "type": "application/octet-stream" },
+  "image_part": { "name": "filename2", "filename": "image", "type": "application/octet-stream" },
+  "fontsizes": { "small": 1, "medium": 0, "large": 2, "max": 3 },
+  "positions": { "bottom-right": 0, "bottom-left": 1, "top-right": 2, "top-left": 3, "center": 4 },
+  "transparencies": { "default": 0, "0%": 1, "25%": 2, "50%": 3, "75%": 4, "100%": 5 },
+  "colors": {
+    "grey": "#607d8b",
+    "black": "#000000",
+    "indigo": "#303F9F",
+    "green": "#4CAF50",
+    "red": "#F44336",
+    "cyan": "#00BCD4",
+    "teal": "#009688",
+    "amber": "#FFC107",
+    "pink": "#E91E63"
+  },
+  "success": "HTTP 200"
+}

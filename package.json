@@ -1,8 +1,8 @@
 {
-  "name": "gladys-integration-template-js",
+  "name": "gladys-tv-notify",
   "version": "1.0.0",
   "private": true,
-  "description": "Official starter template to build an external integration for Gladys Assistant with the JavaScript SDK.",
+  "description": "Gladys Assistant integration: notifications on Android TV, Google TV and Fire TV (Notifications for Android TV, PiPup, TvOverlay).",
   "type": "module",
   "main": "index.js",
   "scripts": {
