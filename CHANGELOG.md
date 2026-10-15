@@ -10,6 +10,8 @@ the notes of the version's GitHub Release.
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-10-15
+
 ### Added
 
 - Notifications on Android TV, Google TV and Fire TV through the free apps
@@ -29,4 +31,5 @@ the notes of the version's GitHub Release.
   notification.
 - Texts and documentation in English, French, German and Spanish.
 
-[Unreleased]: https://github.com/guim31/gladys-tv-notify/commits/main
+[Unreleased]: https://github.com/guim31/gladys-tv-notify/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/guim31/gladys-tv-notify/releases/tag/v1.0.1

@@ -8,8 +8,8 @@
     "de": "Zeig Benachrichtigungen auf deinem Android TV oder Fire TV: Nachrichten, Türklingel-Bilder…",
     "es": "Muestre notificaciones en su Android TV o Fire TV: mensajes, foto del timbre, alertas."
   },
-  "version": "1.0.0",
-  "docker_image": "ghcr.io/guim31/gladys-tv-notify:1.0.0",
+  "version": "1.0.1",
+  "docker_image": "ghcr.io/guim31/gladys-tv-notify:1.0.1",
   "gladys_version": ">=5.2.0",
   "cover_image": "https://raw.githubusercontent.com/guim31/gladys-tv-notify/main/cover.png",
   "categories": ["notifications", "multimedia"],
