@@ -1,147 +1,402 @@
 {
   "manifest_version": 1,
   "type": "device",
-  "name": "Demo Devices Template",
+  "name": "Notifications Android/Fire TV",
   "description": {
-    "en": "Starter template showing sensors, a switch, a dimmable light and a smart plug.",
-    "fr": "Template de démarrage : capteurs, interrupteur, lampe variable et prise connectée."
+    "en": "Show notifications on your Android TV or Fire TV: messages, doorbell camera pictures, alerts.",
+    "fr": "Affichez des notifications sur votre Android TV ou Fire TV : messages, photo de la sonnette…",
+    "de": "Zeig Benachrichtigungen auf deinem Android TV oder Fire TV: Nachrichten, Türklingel-Bilder…",
+    "es": "Muestre notificaciones en su Android TV o Fire TV: mensajes, foto del timbre, alertas."
   },
   "version": "1.0.0",
-  "docker_image": "ghcr.io/gladysassistant/integration-template-js:1.0.0",
-  "gladys_version": ">=5.1.0",
-  "cover_image": "https://raw.githubusercontent.com/GladysAssistant/integration-template-js/master/cover.png",
-  "categories": ["lighting", "security", "environment"],
-  "transports": ["local", "cloud"],
+  "docker_image": "ghcr.io/guim31/gladys-tv-notify:1.0.0",
+  "gladys_version": ">=5.2.0",
+  "cover_image": "https://raw.githubusercontent.com/guim31/gladys-tv-notify/main/cover.png",
+  "categories": ["notifications", "multimedia"],
+  "transports": ["local"],
   "config_schema": [
     {
       "key": "intro",
       "type": "section",
-      "label": { "en": "Getting started", "fr": "Pour commencer" },
+      "label": {
+        "en": "Your TVs",
+        "fr": "Vos TV",
+        "de": "Deine Fernseher",
+        "es": "Sus televisores"
+      },
       "description": {
-        "en": "The demo weather station reads real data from the free Open-Meteo API: pick the coordinates to observe. No account, no API key.",
-        "fr": "La station météo de démonstration lit de vraies données via l'API gratuite Open-Meteo : choisissez les coordonnées à observer. Pas de compte, pas de clé d'API."
+        "en": "Install a notification app on each TV (\"Notifications for Android TV\" or \"for Fire TV\", PiPup, TvOverlay) and open it once: it shows the address of the TV. Then add the TV with \"Add or update a TV\" below and create its device in the Discover tab.",
+        "fr": "Installez une appli de notifications sur chaque TV (« Notifications for Android TV » ou « for Fire TV », PiPup, TvOverlay) et ouvrez-la une fois : elle affiche l'adresse de la TV. Ajoutez la TV avec « Ajouter ou modifier une TV » et créez son appareil dans l'onglet Découverte.",
+        "de": "Installiere auf jedem Fernseher eine Benachrichtigungs-App („Notifications for Android TV“ oder „for Fire TV“, PiPup, TvOverlay) und öffne sie einmal: Die App zeigt die Adresse an. Füge den Fernseher mit „Fernseher hinzufügen oder ändern“ hinzu und lege sein Gerät unter „Entdecken“ an.",
+        "es": "Instale una aplicación de notificaciones en cada televisor («Notifications for Android TV» o «for Fire TV», PiPup, TvOverlay) y ábrala una vez: muestra la dirección del televisor. Añádalo con «Añadir o modificar un televisor» y cree su dispositivo en la pestaña Descubrir."
       },
       "links": [
         {
-          "url": "https://open-meteo.com/en/docs",
-          "label": { "en": "Open-Meteo documentation", "fr": "Documentation Open-Meteo" }
+          "url": "https://play.google.com/store/apps/details?id=de.cyberdream.androidtv.notifications.google",
+          "label": {
+            "en": "Notifications for Android TV (Google Play)",
+            "fr": "Notifications for Android TV (Google Play)",
+            "de": "Notifications for Android TV (Google Play)",
+            "es": "Notifications for Android TV (Google Play)"
+          }
+        },
+        {
+          "url": "https://www.amazon.com/dp/B00OESCXEK",
+          "label": {
+            "en": "Notifications for Fire TV (Amazon Appstore)",
+            "fr": "Notifications for Fire TV (Amazon Appstore)",
+            "de": "Notifications for Fire TV (Amazon Appstore)",
+            "es": "Notifications for Fire TV (Amazon Appstore)"
+          }
         }
       ]
     },
     {
-      "key": "latitude",
-      "type": "number",
-      "label": { "en": "Latitude", "fr": "Latitude" },
-      "description": {
-        "en": "Latitude used for the demo weather sensor.",
-        "fr": "Latitude utilisée par le capteur météo de démonstration."
-      },
-      "placeholder": { "en": "e.g. 48.8566", "fr": "ex. 48.8566" },
-      "required": true,
-      "default": 48.8566,
-      "min": -90,
-      "max": 90
-    },
-    {
-      "key": "longitude",
-      "type": "number",
-      "label": { "en": "Longitude", "fr": "Longitude" },
-      "description": {
-        "en": "Longitude used for the demo weather sensor.",
-        "fr": "Longitude utilisée par le capteur météo de démonstration."
-      },
-      "placeholder": { "en": "e.g. 2.3522", "fr": "ex. 2.3522" },
-      "required": true,
-      "default": 2.3522,
-      "min": -180,
-      "max": 180
-    },
-    {
-      "key": "unit",
+      "key": "language",
       "type": "select",
-      "label": { "en": "Temperature unit", "fr": "Unité de température" },
+      "label": {
+        "en": "Language",
+        "fr": "Langue",
+        "de": "Sprache",
+        "es": "Idioma"
+      },
+      "description": {
+        "en": "Language of the feature names, of the action messages and of the test notification.",
+        "fr": "Langue des noms de fonctionnalités, des messages des actions et de la notification de test.",
+        "de": "Sprache der Funktionsnamen, der Meldungen der Aktionen und der Testbenachrichtigung.",
+        "es": "Idioma de los nombres de las funciones, de los mensajes de las acciones y de la notificación de prueba."
+      },
       "required": false,
-      "default": "celsius",
+      "default": "fr",
       "options": [
-        { "value": "celsius", "label": { "en": "Celsius", "fr": "Celsius" } },
-        { "value": "fahrenheit", "label": { "en": "Fahrenheit", "fr": "Fahrenheit" } }
+        {
+          "value": "en",
+          "label": {
+            "en": "English",
+            "fr": "English",
+            "de": "English",
+            "es": "English"
+          }
+        },
+        {
+          "value": "fr",
+          "label": {
+            "en": "Français",
+            "fr": "Français",
+            "de": "Français",
+            "es": "Français"
+          }
+        },
+        {
+          "value": "de",
+          "label": {
+            "en": "Deutsch",
+            "fr": "Deutsch",
+            "de": "Deutsch",
+            "es": "Deutsch"
+          }
+        },
+        {
+          "value": "es",
+          "label": {
+            "en": "Español",
+            "fr": "Español",
+            "de": "Español",
+            "es": "Español"
+          }
+        }
       ]
     },
     {
-      "key": "poll_frequency",
-      "type": "number",
-      "label": { "en": "Refresh interval (s)", "fr": "Intervalle de rafraîchissement (s)" },
+      "key": "check_interval",
+      "type": "select",
+      "label": {
+        "en": "Check the TVs every",
+        "fr": "Tester les TV toutes les",
+        "de": "Fernseher prüfen alle",
+        "es": "Comprobar los televisores cada"
+      },
       "description": {
-        "en": "How often sensors are polled, in seconds (one minute minimum).",
-        "fr": "Fréquence d'interrogation des capteurs, en secondes (une minute minimum)."
+        "en": "One connection to the notification app of each TV: nothing appears on the screen.",
+        "fr": "Une connexion à l'appli de notifications de chaque TV : rien ne s'affiche à l'écran.",
+        "de": "Eine Verbindung zur Benachrichtigungs-App jedes Fernsehers: Auf dem Bildschirm erscheint nichts.",
+        "es": "Una conexión a la aplicación de notificaciones de cada televisor: no aparece nada en la pantalla."
       },
       "required": false,
-      "default": 300,
-      "min": 60,
-      "max": 3600
+      "default": "30",
+      "options": [
+        {
+          "value": "15",
+          "label": {
+            "en": "15 seconds",
+            "fr": "15 secondes",
+            "de": "15 Sekunden",
+            "es": "15 segundos"
+          }
+        },
+        {
+          "value": "30",
+          "label": {
+            "en": "30 seconds",
+            "fr": "30 secondes",
+            "de": "30 Sekunden",
+            "es": "30 segundos"
+          }
+        },
+        {
+          "value": "60",
+          "label": {
+            "en": "1 minute",
+            "fr": "1 minute",
+            "de": "1 Minute",
+            "es": "1 minuto"
+          }
+        },
+        {
+          "value": "120",
+          "label": {
+            "en": "2 minutes",
+            "fr": "2 minutes",
+            "de": "2 Minuten",
+            "es": "2 minutos"
+          }
+        },
+        {
+          "value": "300",
+          "label": {
+            "en": "5 minutes",
+            "fr": "5 minutes",
+            "de": "5 Minuten",
+            "es": "5 minutos"
+          }
+        }
+      ]
+    },
+    {
+      "key": "offline_after",
+      "type": "select",
+      "label": {
+        "en": "Unreachable after",
+        "fr": "Injoignable après",
+        "de": "Nicht erreichbar nach",
+        "es": "Inaccesible tras"
+      },
+      "description": {
+        "en": "Time without any answer before a TV is shown as unreachable. A TV on Wi-Fi sometimes misses one check.",
+        "fr": "Durée sans aucune réponse avant qu'une TV soit indiquée injoignable. Une TV en Wi-Fi rate parfois un test.",
+        "de": "Zeit ohne Antwort, bevor ein Fernseher als nicht erreichbar gilt. Ein Fernseher im WLAN verpasst manchmal eine Prüfung.",
+        "es": "Tiempo sin respuesta antes de indicar un televisor como inaccesible. Un televisor en Wi-Fi a veces pierde una comprobación."
+      },
+      "required": false,
+      "default": "60",
+      "options": [
+        {
+          "value": "0",
+          "label": {
+            "en": "At the first failed check",
+            "fr": "Au premier test sans réponse",
+            "de": "Bei der ersten Prüfung ohne Antwort",
+            "es": "En la primera comprobación sin respuesta"
+          }
+        },
+        {
+          "value": "30",
+          "label": {
+            "en": "30 seconds",
+            "fr": "30 secondes",
+            "de": "30 Sekunden",
+            "es": "30 segundos"
+          }
+        },
+        {
+          "value": "60",
+          "label": {
+            "en": "1 minute",
+            "fr": "1 minute",
+            "de": "1 Minute",
+            "es": "1 minuto"
+          }
+        },
+        {
+          "value": "120",
+          "label": {
+            "en": "2 minutes",
+            "fr": "2 minutes",
+            "de": "2 Minuten",
+            "es": "2 minutos"
+          }
+        },
+        {
+          "value": "300",
+          "label": {
+            "en": "5 minutes",
+            "fr": "5 minutes",
+            "de": "5 Minuten",
+            "es": "5 minutos"
+          }
+        }
+      ]
     }
   ],
   "actions": [
     {
-      "key": "test_weather",
-      "label": { "en": "Test the weather provider", "fr": "Tester le fournisseur météo" },
-      "timeout_seconds": 30
-    },
-    {
-      "key": "identify",
-      "label": { "en": "Identify a device", "fr": "Identifier un appareil" },
+      "key": "add_tv",
+      "label": {
+        "en": "Add or update a TV",
+        "fr": "Ajouter ou modifier une TV",
+        "de": "Fernseher hinzufügen oder ändern",
+        "es": "Añadir o modificar un televisor"
+      },
+      "description": {
+        "en": "Adds a TV, or updates the TV with the same name or address, then checks that its app answers.",
+        "fr": "Ajoute une TV, ou met à jour celle de même nom ou de même adresse, puis vérifie que son appli répond.",
+        "de": "Fügt einen Fernseher hinzu oder aktualisiert den mit gleichem Namen oder gleicher Adresse und prüft dann, ob seine App antwortet.",
+        "es": "Añade un televisor, o actualiza el que tiene el mismo nombre o la misma dirección, y comprueba que su aplicación responde."
+      },
+      "timeout_seconds": 15,
       "fields": [
         {
-          "key": "device",
+          "key": "name",
+          "type": "string",
+          "required": true,
+          "label": {
+            "en": "Name",
+            "fr": "Nom",
+            "de": "Name",
+            "es": "Nombre"
+          },
+          "placeholder": {
+            "en": "e.g. Living room TV",
+            "fr": "ex. TV du salon",
+            "de": "z. B. Wohnzimmer-TV",
+            "es": "p. ej. Televisor del salón"
+          }
+        },
+        {
+          "key": "address",
+          "type": "string",
+          "required": true,
+          "label": {
+            "en": "IP address of the TV",
+            "fr": "Adresse IP de la TV",
+            "de": "IP-Adresse des Fernsehers",
+            "es": "Dirección IP del televisor"
+          },
+          "description": {
+            "en": "Shown by the app when you open it on the TV. A fixed address works best (DHCP reservation in your router).",
+            "fr": "Affichée par l'appli quand vous l'ouvrez sur la TV. Une adresse fixe est préférable (réservation DHCP dans votre box).",
+            "de": "Wird von der App angezeigt, wenn du sie auf dem Fernseher öffnest. Eine feste Adresse ist am besten (DHCP-Reservierung im Router).",
+            "es": "La muestra la aplicación cuando la abre en el televisor. Es mejor una dirección fija (reserva DHCP en su router)."
+          },
+          "placeholder": {
+            "en": "e.g. 192.168.1.30",
+            "fr": "ex. 192.168.1.30",
+            "de": "z. B. 192.168.1.30",
+            "es": "p. ej. 192.168.1.30"
+          }
+        },
+        {
+          "key": "app",
           "type": "select",
-          "source": "devices",
-          "label": { "en": "Device", "fr": "Appareil" },
-          "required": true
+          "required": true,
+          "label": {
+            "en": "App installed on the TV",
+            "fr": "Appli installée sur la TV",
+            "de": "Auf dem Fernseher installierte App",
+            "es": "Aplicación instalada en el televisor"
+          },
+          "options": [
+            {
+              "value": "nfandroidtv",
+              "label": {
+                "en": "Notifications for Android TV / Fire TV",
+                "fr": "Notifications for Android TV / Fire TV",
+                "de": "Notifications for Android TV / Fire TV",
+                "es": "Notifications for Android TV / Fire TV"
+              }
+            },
+            {
+              "value": "pipup",
+              "label": {
+                "en": "PiPup",
+                "fr": "PiPup",
+                "de": "PiPup",
+                "es": "PiPup"
+              }
+            },
+            {
+              "value": "tvoverlay",
+              "label": {
+                "en": "TvOverlay",
+                "fr": "TvOverlay",
+                "de": "TvOverlay",
+                "es": "TvOverlay"
+              }
+            }
+          ]
+        },
+        {
+          "key": "port",
+          "type": "number",
+          "required": false,
+          "min": 1,
+          "max": 65535,
+          "label": {
+            "en": "Port (optional)",
+            "fr": "Port (facultatif)",
+            "de": "Port (optional)",
+            "es": "Puerto (opcional)"
+          },
+          "description": {
+            "en": "Empty: the port of the app (7676, PiPup 7979, TvOverlay 5001).",
+            "fr": "Vide : le port de l'appli (7676, PiPup 7979, TvOverlay 5001).",
+            "de": "Leer: der Port der App (7676, PiPup 7979, TvOverlay 5001).",
+            "es": "Vacío: el puerto de la aplicación (7676, PiPup 7979, TvOverlay 5001)."
+          }
         }
       ]
-    }
-  ],
-  "scene_triggers": [
+    },
     {
-      "key": "motion_detected",
-      "label": { "en": "Motion detected", "fr": "Mouvement détecté" },
+      "key": "remove_tv",
+      "label": {
+        "en": "Remove a TV",
+        "fr": "Retirer une TV",
+        "de": "Fernseher entfernen",
+        "es": "Eliminar un televisor"
+      },
       "description": {
-        "en": "A demo motion sensor saw a person or an animal move.",
-        "fr": "Un détecteur de démonstration a vu bouger une personne ou un animal."
+        "en": "Stops checking the TV. Delete its device in Gladys as well if you no longer need it.",
+        "fr": "Arrête de tester la TV. Supprimez aussi son appareil dans Gladys s'il ne sert plus.",
+        "de": "Beendet die Prüfung des Fernsehers. Lösche auch sein Gerät in Gladys, wenn du es nicht mehr brauchst.",
+        "es": "Deja de comprobar el televisor. Elimine también su dispositivo en Gladys si ya no lo necesita."
       },
       "fields": [
         {
-          "key": "device",
-          "type": "select",
-          "source": "devices",
-          "label": { "en": "Sensor", "fr": "Détecteur" }
-        },
-        {
-          "key": "target",
-          "type": "multi_select",
-          "label": { "en": "What moved", "fr": "Ce qui a bougé" },
-          "options": [
-            { "value": "person", "label": { "en": "Person", "fr": "Personne" } },
-            { "value": "animal", "label": { "en": "Animal", "fr": "Animal" } }
-          ]
-        }
-      ],
-      "variables": [
-        {
-          "key": "target",
+          "key": "tv",
           "type": "string",
-          "label": { "en": "What moved", "fr": "Ce qui a bougé" }
+          "required": true,
+          "label": {
+            "en": "Name or address of the TV",
+            "fr": "Nom ou adresse de la TV",
+            "de": "Name oder Adresse des Fernsehers",
+            "es": "Nombre o dirección del televisor"
+          }
         }
       ]
-    }
-  ],
-  "scene_actions": [
+    },
     {
-      "key": "identify_device",
-      "label": { "en": "Identify a device", "fr": "Identifier un appareil" },
+      "key": "test_notification",
+      "label": {
+        "en": "Send a test notification",
+        "fr": "Envoyer une notification de test",
+        "de": "Testbenachrichtigung senden",
+        "es": "Enviar una notificación de prueba"
+      },
       "description": {
-        "en": "Make a device signal itself (the demo light blinks).",
-        "fr": "Fait se signaler un appareil (la lampe de démonstration clignote)."
+        "en": "Shows a short message on the chosen TV, to check that everything works.",
+        "fr": "Affiche un court message sur la TV choisie, pour vérifier que tout fonctionne.",
+        "de": "Zeigt eine kurze Nachricht auf dem gewählten Fernseher, um zu prüfen, ob alles funktioniert.",
+        "es": "Muestra un mensaje corto en el televisor elegido, para comprobar que todo funciona."
       },
       "timeout_seconds": 15,
       "fields": [
@@ -149,29 +404,639 @@
           "key": "device",
           "type": "select",
           "source": "devices",
-          "label": { "en": "Device", "fr": "Appareil" },
-          "required": true
+          "required": true,
+          "label": {
+            "en": "TV",
+            "fr": "TV",
+            "de": "Fernseher",
+            "es": "Televisor"
+          }
+        }
+      ]
+    }
+  ],
+  "scene_actions": [
+    {
+      "key": "show_notification",
+      "label": {
+        "en": "Show a notification on the TV",
+        "fr": "Afficher une notification sur la TV",
+        "de": "Benachrichtigung auf dem Fernseher anzeigen",
+        "es": "Mostrar una notificación en el televisor"
+      },
+      "description": {
+        "en": "A message over what the TV is showing, with an optional picture (a camera snapshot). If the TV is off, \"Notification shown\" is 0.",
+        "fr": "Un message par-dessus ce qu'affiche la TV, avec une image facultative (photo d'une caméra). Si la TV est éteinte, « Notification affichée » vaut 0.",
+        "de": "Eine Nachricht über dem Fernsehbild, mit optionalem Bild (Kamera-Schnappschuss). Ist der Fernseher aus, ist „Benachrichtigung angezeigt“ 0.",
+        "es": "Un mensaje sobre lo que muestra el televisor, con una imagen opcional (foto de una cámara). Si el televisor está apagado, «Notificación mostrada» vale 0."
+      },
+      "timeout_seconds": 30,
+      "fields": [
+        {
+          "key": "device",
+          "type": "select",
+          "source": "devices",
+          "required": true,
+          "label": {
+            "en": "TV",
+            "fr": "TV",
+            "de": "Fernseher",
+            "es": "Televisor"
+          }
+        },
+        {
+          "key": "title",
+          "type": "string",
+          "required": false,
+          "label": {
+            "en": "Title",
+            "fr": "Titre",
+            "de": "Titel",
+            "es": "Título"
+          },
+          "placeholder": {
+            "en": "e.g. Doorbell",
+            "fr": "ex. Sonnette",
+            "de": "z. B. Türklingel",
+            "es": "p. ej. Timbre"
+          }
+        },
+        {
+          "key": "message",
+          "type": "string",
+          "required": true,
+          "label": {
+            "en": "Message",
+            "fr": "Message",
+            "de": "Nachricht",
+            "es": "Mensaje"
+          },
+          "placeholder": {
+            "en": "e.g. Someone is at the door",
+            "fr": "ex. Quelqu'un sonne à la porte",
+            "de": "z. B. Jemand ist an der Tür",
+            "es": "p. ej. Hay alguien en la puerta"
+          }
+        },
+        {
+          "key": "duration",
+          "type": "number",
+          "required": false,
+          "default": 10,
+          "min": 1,
+          "max": 300,
+          "label": {
+            "en": "Display time (seconds)",
+            "fr": "Durée d'affichage (secondes)",
+            "de": "Anzeigedauer (Sekunden)",
+            "es": "Duración en pantalla (segundos)"
+          }
+        },
+        {
+          "key": "position",
+          "type": "select",
+          "required": false,
+          "default": "bottom_right",
+          "label": {
+            "en": "Position",
+            "fr": "Position",
+            "de": "Position",
+            "es": "Posición"
+          },
+          "options": [
+            {
+              "value": "bottom_right",
+              "label": {
+                "en": "Bottom right",
+                "fr": "En bas à droite",
+                "de": "Unten rechts",
+                "es": "Abajo a la derecha"
+              }
+            },
+            {
+              "value": "bottom_left",
+              "label": {
+                "en": "Bottom left",
+                "fr": "En bas à gauche",
+                "de": "Unten links",
+                "es": "Abajo a la izquierda"
+              }
+            },
+            {
+              "value": "top_right",
+              "label": {
+                "en": "Top right",
+                "fr": "En haut à droite",
+                "de": "Oben rechts",
+                "es": "Arriba a la derecha"
+              }
+            },
+            {
+              "value": "top_left",
+              "label": {
+                "en": "Top left",
+                "fr": "En haut à gauche",
+                "de": "Oben links",
+                "es": "Arriba a la izquierda"
+              }
+            },
+            {
+              "value": "center",
+              "label": {
+                "en": "Center (not TvOverlay)",
+                "fr": "Centre (sauf TvOverlay)",
+                "de": "Mitte (nicht TvOverlay)",
+                "es": "Centro (no TvOverlay)"
+              }
+            }
+          ]
+        },
+        {
+          "key": "color",
+          "type": "select",
+          "required": false,
+          "default": "grey",
+          "label": {
+            "en": "Background color",
+            "fr": "Couleur de fond",
+            "de": "Hintergrundfarbe",
+            "es": "Color de fondo"
+          },
+          "description": {
+            "en": "Not with TvOverlay, which uses the layout chosen in the app.",
+            "fr": "Pas avec TvOverlay, qui utilise la mise en page choisie dans l'appli.",
+            "de": "Nicht mit TvOverlay, das das in der App gewählte Layout verwendet.",
+            "es": "No con TvOverlay, que usa el diseño elegido en la aplicación."
+          },
+          "options": [
+            {
+              "value": "grey",
+              "label": {
+                "en": "Grey",
+                "fr": "Gris",
+                "de": "Grau",
+                "es": "Gris"
+              }
+            },
+            {
+              "value": "black",
+              "label": {
+                "en": "Black",
+                "fr": "Noir",
+                "de": "Schwarz",
+                "es": "Negro"
+              }
+            },
+            {
+              "value": "indigo",
+              "label": {
+                "en": "Indigo",
+                "fr": "Indigo",
+                "de": "Indigo",
+                "es": "Índigo"
+              }
+            },
+            {
+              "value": "green",
+              "label": {
+                "en": "Green",
+                "fr": "Vert",
+                "de": "Grün",
+                "es": "Verde"
+              }
+            },
+            {
+              "value": "red",
+              "label": {
+                "en": "Red",
+                "fr": "Rouge",
+                "de": "Rot",
+                "es": "Rojo"
+              }
+            },
+            {
+              "value": "cyan",
+              "label": {
+                "en": "Cyan",
+                "fr": "Cyan",
+                "de": "Cyan",
+                "es": "Cian"
+              }
+            },
+            {
+              "value": "teal",
+              "label": {
+                "en": "Teal",
+                "fr": "Bleu canard",
+                "de": "Petrol",
+                "es": "Verde azulado"
+              }
+            },
+            {
+              "value": "amber",
+              "label": {
+                "en": "Amber",
+                "fr": "Ambre",
+                "de": "Bernstein",
+                "es": "Ámbar"
+              }
+            },
+            {
+              "value": "pink",
+              "label": {
+                "en": "Pink",
+                "fr": "Rose",
+                "de": "Rosa",
+                "es": "Rosa"
+              }
+            }
+          ]
+        },
+        {
+          "key": "transparency",
+          "type": "select",
+          "required": false,
+          "default": "0",
+          "label": {
+            "en": "Background transparency",
+            "fr": "Transparence du fond",
+            "de": "Transparenz des Hintergrunds",
+            "es": "Transparencia del fondo"
+          },
+          "options": [
+            {
+              "value": "0",
+              "label": {
+                "en": "Opaque",
+                "fr": "Opaque",
+                "de": "Deckend",
+                "es": "Opaco"
+              }
+            },
+            {
+              "value": "25",
+              "label": {
+                "en": "25 %",
+                "fr": "25 %",
+                "de": "25 %",
+                "es": "25 %"
+              }
+            },
+            {
+              "value": "50",
+              "label": {
+                "en": "50 %",
+                "fr": "50 %",
+                "de": "50 %",
+                "es": "50 %"
+              }
+            },
+            {
+              "value": "75",
+              "label": {
+                "en": "75 %",
+                "fr": "75 %",
+                "de": "75 %",
+                "es": "75 %"
+              }
+            },
+            {
+              "value": "100",
+              "label": {
+                "en": "Fully transparent",
+                "fr": "Totalement transparent",
+                "de": "Ganz transparent",
+                "es": "Totalmente transparente"
+              }
+            }
+          ]
+        },
+        {
+          "key": "icon",
+          "type": "select",
+          "required": false,
+          "default": "none",
+          "label": {
+            "en": "Icon",
+            "fr": "Icône",
+            "de": "Symbol",
+            "es": "Icono"
+          },
+          "description": {
+            "en": "Not with PiPup.",
+            "fr": "Pas avec PiPup.",
+            "de": "Nicht mit PiPup.",
+            "es": "No con PiPup."
+          },
+          "options": [
+            {
+              "value": "none",
+              "label": {
+                "en": "None",
+                "fr": "Aucune",
+                "de": "Keins",
+                "es": "Ninguno"
+              }
+            },
+            {
+              "value": "doorbell",
+              "label": {
+                "en": "Doorbell",
+                "fr": "Sonnette",
+                "de": "Türklingel",
+                "es": "Timbre"
+              }
+            },
+            {
+              "value": "bell",
+              "label": {
+                "en": "Bell",
+                "fr": "Cloche",
+                "de": "Glocke",
+                "es": "Campana"
+              }
+            },
+            {
+              "value": "camera",
+              "label": {
+                "en": "Camera",
+                "fr": "Caméra",
+                "de": "Kamera",
+                "es": "Cámara"
+              }
+            },
+            {
+              "value": "alert",
+              "label": {
+                "en": "Warning",
+                "fr": "Alerte",
+                "de": "Warnung",
+                "es": "Alerta"
+              }
+            },
+            {
+              "value": "info",
+              "label": {
+                "en": "Information",
+                "fr": "Information",
+                "de": "Information",
+                "es": "Información"
+              }
+            },
+            {
+              "value": "door",
+              "label": {
+                "en": "Door",
+                "fr": "Porte",
+                "de": "Tür",
+                "es": "Puerta"
+              }
+            },
+            {
+              "value": "package",
+              "label": {
+                "en": "Parcel",
+                "fr": "Colis",
+                "de": "Paket",
+                "es": "Paquete"
+              }
+            },
+            {
+              "value": "mail",
+              "label": {
+                "en": "Mail",
+                "fr": "Courrier",
+                "de": "Post",
+                "es": "Correo"
+              }
+            },
+            {
+              "value": "phone",
+              "label": {
+                "en": "Phone",
+                "fr": "Téléphone",
+                "de": "Telefon",
+                "es": "Teléfono"
+              }
+            },
+            {
+              "value": "washing_machine",
+              "label": {
+                "en": "Washing machine",
+                "fr": "Lave-linge",
+                "de": "Waschmaschine",
+                "es": "Lavadora"
+              }
+            },
+            {
+              "value": "dishwasher",
+              "label": {
+                "en": "Dishwasher",
+                "fr": "Lave-vaisselle",
+                "de": "Geschirrspüler",
+                "es": "Lavavajillas"
+              }
+            },
+            {
+              "value": "food",
+              "label": {
+                "en": "Meal",
+                "fr": "Repas",
+                "de": "Essen",
+                "es": "Comida"
+              }
+            },
+            {
+              "value": "thermometer",
+              "label": {
+                "en": "Thermometer",
+                "fr": "Thermomètre",
+                "de": "Thermometer",
+                "es": "Termómetro"
+              }
+            },
+            {
+              "value": "water_leak",
+              "label": {
+                "en": "Water leak",
+                "fr": "Fuite d'eau",
+                "de": "Wasserleck",
+                "es": "Fuga de agua"
+              }
+            },
+            {
+              "value": "fire",
+              "label": {
+                "en": "Fire",
+                "fr": "Feu",
+                "de": "Feuer",
+                "es": "Fuego"
+              }
+            },
+            {
+              "value": "weather",
+              "label": {
+                "en": "Storm",
+                "fr": "Orage",
+                "de": "Gewitter",
+                "es": "Tormenta"
+              }
+            },
+            {
+              "value": "car",
+              "label": {
+                "en": "Car",
+                "fr": "Voiture",
+                "de": "Auto",
+                "es": "Coche"
+              }
+            },
+            {
+              "value": "home",
+              "label": {
+                "en": "Home",
+                "fr": "Maison",
+                "de": "Haus",
+                "es": "Casa"
+              }
+            },
+            {
+              "value": "baby",
+              "label": {
+                "en": "Baby",
+                "fr": "Bébé",
+                "de": "Baby",
+                "es": "Bebé"
+              }
+            }
+          ]
+        },
+        {
+          "key": "image_url",
+          "type": "string",
+          "required": false,
+          "label": {
+            "en": "Picture URL (optional)",
+            "fr": "URL d'une image (facultative)",
+            "de": "Bild-URL (optional)",
+            "es": "URL de una imagen (opcional)"
+          },
+          "description": {
+            "en": "The snapshot URL of a camera, downloaded at each notification. A password written in it is readable by every Gladys user: use a camera account limited to viewing.",
+            "fr": "L'URL d'instantané d'une caméra, téléchargée à chaque notification. Un mot de passe écrit dedans est lisible par tous les utilisateurs de Gladys : utilisez un compte caméra limité à la consultation.",
+            "de": "Die Schnappschuss-URL einer Kamera, bei jeder Benachrichtigung geladen. Ein darin geschriebenes Passwort ist für alle Gladys-Benutzer lesbar: Nimm ein Kamerakonto, das nur ansehen darf.",
+            "es": "La URL de instantánea de una cámara, descargada en cada notificación. Una contraseña escrita en ella es legible por todos los usuarios de Gladys: use una cuenta de cámara limitada a la visualización."
+          },
+          "placeholder": {
+            "en": "e.g. http://192.168.1.40/snapshot.jpg",
+            "fr": "ex. http://192.168.1.40/snapshot.jpg",
+            "de": "z. B. http://192.168.1.40/snapshot.jpg",
+            "es": "p. ej. http://192.168.1.40/snapshot.jpg"
+          }
         }
       ],
       "outputs": [
         {
-          "key": "signalled",
-          "type": "boolean",
-          "label": { "en": "Device signalled", "fr": "Appareil signalé" }
+          "key": "sent",
+          "type": "number",
+          "label": {
+            "en": "Notification shown (1 or 0)",
+            "fr": "Notification affichée (1 ou 0)",
+            "de": "Benachrichtigung angezeigt (1 oder 0)",
+            "es": "Notificación mostrada (1 o 0)"
+          }
         }
       ]
     }
   ],
   "widgets": [
     {
-      "key": "demo_status",
-      "label": { "en": "Demo status", "fr": "État de la démo" },
-      "description": {
-        "en": "Live temperature and plug power, plug connection and observed location.",
-        "fr": "Température et puissance en direct, connexion de la prise, position observée."
+      "key": "tv_message",
+      "label": {
+        "en": "Message on the TV",
+        "fr": "Message sur la TV",
+        "de": "Nachricht an den TV",
+        "es": "Mensaje en la TV"
       },
-      "icon": "activity",
-      "action_timeout_seconds": 15
+      "description": {
+        "en": "Write a message, or tap a quick one, and it appears on the TV.",
+        "fr": "Écrivez un message, ou touchez un message rapide, et il s'affiche sur la TV.",
+        "de": "Schreib eine Nachricht oder tippe auf eine Schnellnachricht, und sie erscheint am TV.",
+        "es": "Escriba un mensaje, o toque uno rápido, y aparece en el televisor."
+      },
+      "icon": "tv",
+      "action_timeout_seconds": 30,
+      "settings": [
+        {
+          "key": "device",
+          "type": "select",
+          "source": "devices",
+          "required": false,
+          "label": {
+            "en": "TV",
+            "fr": "TV",
+            "de": "Fernseher",
+            "es": "Televisor"
+          },
+          "description": {
+            "en": "Empty: the first TV of the integration.",
+            "fr": "Vide : la première TV de l'intégration.",
+            "de": "Leer: der erste Fernseher der Integration.",
+            "es": "Vacío: el primer televisor de la integración."
+          }
+        },
+        {
+          "key": "quick_1",
+          "type": "string",
+          "required": false,
+          "label": {
+            "en": "Quick message 1",
+            "fr": "Message rapide 1",
+            "de": "Schnellnachricht 1",
+            "es": "Mensaje rápido 1"
+          },
+          "placeholder": {
+            "en": "e.g. Dinner is ready!",
+            "fr": "ex. À table !",
+            "de": "z. B. Essen ist fertig!",
+            "es": "p. ej. ¡A comer!"
+          }
+        },
+        {
+          "key": "quick_2",
+          "type": "string",
+          "required": false,
+          "label": {
+            "en": "Quick message 2",
+            "fr": "Message rapide 2",
+            "de": "Schnellnachricht 2",
+            "es": "Mensaje rápido 2"
+          },
+          "placeholder": {
+            "en": "e.g. Bedtime!",
+            "fr": "ex. Au lit !",
+            "de": "z. B. Ab ins Bett!",
+            "es": "p. ej. ¡A la cama!"
+          }
+        },
+        {
+          "key": "quick_3",
+          "type": "string",
+          "required": false,
+          "label": {
+            "en": "Quick message 3",
+            "fr": "Message rapide 3",
+            "de": "Schnellnachricht 3",
+            "es": "Mensaje rápido 3"
+          },
+          "placeholder": {
+            "en": "e.g. Come and help, please",
+            "fr": "ex. Viens m'aider, s'il te plaît",
+            "de": "z. B. Komm bitte helfen",
+            "es": "p. ej. Venga a ayudar, por favor"
+          }
+        }
+      ]
     }
   ]
 }

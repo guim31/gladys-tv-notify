@@ -1,169 +1,206 @@
 // -----------------------------------------------------------------------------
-// Dashboard widgets (SDK v0.14+, Gladys 5.1+).
+// Dashboard widget (manifest `widgets`, Gladys 5.1+, form buttons 5.2+):
+// `tv_message`, a message on the TV from the dashboard.
 //
-// A widget puts the integration's own data on the Gladys dashboard without a
-// dedicated core widget. The manifest `widgets` field declares its identity
-// (key, label, icon, optional per-instance `settings`); at runtime the
-// integration returns a DECLARATIVE content — `text`, `value`, `gauge`,
-// `status`, `chart`, `card-list`, `image`, `button` — that the core renders
-// with its own theme, dark mode and translations. No HTML, no CSS.
+// - a status line: is the TV reachable (on, its app answering);
+// - "Write a message": a form behind the button (Gladys 5.2.0, #3168), the
+//   typed message appears on the TV — "Dinner is ready!" from the kitchen
+//   tablet to the living room;
+// - up to three quick messages, written once in the widget settings, one tap
+//   each.
 //
-// Each entry of WIDGETS is keyed by the widget `key` and exposes:
-//   - get(gladys, { settings, language, units, config }): the content,
-//     registered by index.js with `gladys.onWidgetGet(key, ...)`;
-//   - action(gladys, { actionKey, params, settings, config }) (optional): a
-//     tapped `button` carrying an `action`, registered with
-//     `gladys.onWidgetAction`.
-//
-// Check your contents in the tests with `validateWidgetContent` (exported by
-// the SDK, see test/widgets.test.js), or run with DEBUG=gladys-integration-sdk
-// to have the SDK log every violation of the vocabulary and the budget.
+// Budget (8 components, 4 buttons): one status, four buttons at most, one
+// text when there is nothing to show. Button keys are distinct (`write`,
+// `quick_1`…): the core drops a button whose action key is already taken. The
+// TV travels in `params`, which the core echoes from the content, never from
+// the request. No `primary` style: invisible in dark mode (#3153).
 // -----------------------------------------------------------------------------
 
-import {
-  createLogger,
-  DEVICE_FEATURE_CATEGORIES,
-  DEVICE_TRANSPORTS,
-  WIDGET_COLORS,
-} from '@gladysassistant/integration-sdk';
-import { identifyDevice } from './devices/index.js';
-import { weatherStation } from './devices/weatherStation.js';
-import { plug } from './devices/plug.js';
-import { light } from './devices/light.js';
+import { WIDGET_COLORS } from '@gladysassistant/integration-sdk';
+import { WIDGET_KEY } from './monitor.js';
+import { NOTIFY_ERRORS, render } from './messages.js';
 
-const logger = createLogger({ name: 'widgets' });
+export const TTL_SECONDS = 60;
+export const QUICK_KEYS = ['quick_1', 'quick_2', 'quick_3'];
+export const WRITE_DURATIONS = ['5', '10', '30', '60'];
+const MAX_BUTTON_LABEL = 24;
 
-// Widget key, as declared in the manifest `widgets` field.
-export const DEMO_STATUS_WIDGET = 'demo_status';
-
-// Keys of the `button` actions the demo_status content declares.
-const DEMO_STATUS_ACTIONS = { IDENTIFY_LIGHT: 'identify_light' };
-
-// How the plug transport reads in the status list.
-const TRANSPORT_STATUS = {
-  [DEVICE_TRANSPORTS.LOCAL]: { value: { en: 'Local', fr: 'Locale' }, color: WIDGET_COLORS.SUCCESS },
-  [DEVICE_TRANSPORTS.CLOUD]: { value: { en: 'Cloud', fr: 'Cloud' }, color: WIDGET_COLORS.INFO },
-  [DEVICE_TRANSPORTS.UNREACHABLE]: {
-    value: { en: 'Unreachable', fr: 'Injoignable' },
-    color: WIDGET_COLORS.DANGER,
+export const TEXT = {
+  empty: {
+    en: 'No TV yet: add one in the configuration of the Notifications Android/Fire TV integration.',
+    fr: "Aucune TV pour l'instant : ajoutez-en une dans la configuration de l'intégration Notifications Android/Fire TV.",
+    de: 'Noch kein Fernseher: Füge einen in der Konfiguration der Integration Notifications Android/Fire TV hinzu.',
+    es: 'Aún no hay televisores: añada uno en la configuración de la integración Notifications Android/Fire TV.',
+  },
+  gone: {
+    en: 'This TV is no longer in the list of the integration.',
+    fr: "Cette TV n'est plus dans la liste de l'intégration.",
+    de: 'Dieser Fernseher ist nicht mehr in der Liste der Integration.',
+    es: 'Este televisor ya no está en la lista de la integración.',
+  },
+  noText: {
+    en: 'This quick message is empty: write it in the widget settings.',
+    fr: 'Ce message rapide est vide : écrivez-le dans les réglages du widget.',
+    de: 'Diese Schnellnachricht ist leer: Schreib sie in den Einstellungen des Widgets.',
+    es: 'Este mensaje rápido está vacío: escríbalo en los ajustes del widget.',
+  },
+  reachable: {
+    en: 'On, reachable',
+    fr: 'Allumée, joignable',
+    de: 'An, erreichbar',
+    es: 'Encendido',
+  },
+  unreachable: {
+    en: 'Off or unreachable',
+    fr: 'Éteinte ou injoignable',
+    de: 'Aus oder nicht erreichbar',
+    es: 'Apagado o inaccesible',
+  },
+  unknown: {
+    en: 'Not checked yet',
+    fr: 'Pas encore testée',
+    de: 'Noch nicht geprüft',
+    es: 'Aún sin comprobar',
+  },
+  write: {
+    en: 'Write a message',
+    fr: 'Écrire un message',
+    de: 'Nachricht schreiben',
+    es: 'Escribir un mensaje',
+  },
+  message: { en: 'Message', fr: 'Message', de: 'Nachricht', es: 'Mensaje' },
+  duration: {
+    en: 'Display time',
+    fr: "Durée d'affichage",
+    de: 'Anzeigedauer',
+    es: 'Duración en pantalla',
+  },
+  seconds: { en: 'seconds', fr: 'secondes', de: 'Sekunden', es: 'segundos' },
+  shown: {
+    en: 'Message shown on ',
+    fr: 'Message affiché sur ',
+    de: 'Nachricht angezeigt auf ',
+    es: 'Mensaje mostrado en ',
   },
 };
 
-// A live tile references a feature by its external_id: read it from the
-// discovery payload itself, so the widget and the device never disagree.
-function featureExternalId(gladys, config, blueprint, category) {
-  const device = blueprint.buildDevice(gladys, config);
-  return device.features.find((feature) => feature.category === category).external_id;
+const t = (text, language) => text[language] ?? text.en;
+
+const truncate = (text, max) => (text.length <= max ? text : `${text.slice(0, max - 1)}…`);
+
+/** The quick messages written in the settings, by key (empty ones left out). */
+function quickMessages(settings) {
+  return QUICK_KEYS.map((key) => ({
+    key,
+    text: typeof settings?.[key] === 'string' ? settings[key].trim() : '',
+  })).filter((quick) => quick.text);
 }
 
-function plugConnectionStatus(gladys, config) {
-  const { transport, degraded } = plug.transport(gladys, config);
-  const { value, color } = TRANSPORT_STATUS[transport];
-  if (degraded) {
-    return {
-      value: { en: `${value.en} (degraded mode)`, fr: `${value.fr} (mode dégradé)` },
-      color: WIDGET_COLORS.WARNING,
-    };
+/** The TV of a widget instance: the chosen one, else the first created TV. */
+function selectedTv(monitor, settings) {
+  const created = monitor.createdTvs();
+  const chosen = typeof settings?.device === 'string' && settings.device ? settings.device : null;
+  if (!chosen) {
+    return { tv: created[0] ?? null, gone: false };
   }
-  return { value, color };
+  const tv = created.find((candidate) => monitor.deviceIdOf(candidate) === chosen) ?? null;
+  return { tv, gone: tv === null };
+}
+
+/** Status row value of a TV (40 characters at most). */
+export function statusValue(view, language) {
+  if (view.reachable === true) {
+    return { value: t(TEXT.reachable, language), color: WIDGET_COLORS.SUCCESS };
+  }
+  if (view.reachable === false) {
+    return { value: t(TEXT.unreachable, language), color: WIDGET_COLORS.DANGER };
+  }
+  return { value: t(TEXT.unknown, language), color: WIDGET_COLORS.NEUTRAL };
 }
 
 export const WIDGETS = {
-  [DEMO_STATUS_WIDGET]: {
-    // `settings` holds the per-instance values of the declared `settings`
-    // (none here); `language` and `units` are those of the user viewing the
-    // dashboard, for the values you format yourself. Multi-language objects
-    // (`{ en, fr }`) are picked by the core, like everywhere else.
-    async get(gladys, { config }) {
-      logger.debug(`onWidgetGet <- ${DEMO_STATUS_WIDGET}`);
-      return {
-        // Reload policy: the computed parts below only change with the
-        // config, and index.js nudges the widget on every (re)connection and
-        // config update (see refreshWidgets) — the TTL is just a safety net.
-        ttl_seconds: 300,
-        components: [
-          // Device-bound tiles: LIVE, they follow the published states over
-          // the core's real-time path. No TTL, no nudge involved.
-          {
-            type: 'value',
-            label: { en: 'Temperature', fr: 'Température' },
-            icon: 'thermometer',
-            device_feature: featureExternalId(
-              gladys,
-              config,
-              weatherStation,
-              DEVICE_FEATURE_CATEGORIES.TEMPERATURE_SENSOR,
-            ),
-          },
-          {
-            type: 'value',
-            label: { en: 'Office plug', fr: 'Prise du bureau' },
-            icon: 'zap',
-            device_feature: featureExternalId(
-              gladys,
-              config,
-              plug,
-              DEVICE_FEATURE_CATEGORIES.ENERGY_SENSOR,
-            ),
-          },
-          // Computed rows: what the integration knows that no device feature
-          // carries. Served from the core cache until the TTL or a nudge.
-          {
-            type: 'status',
-            items: [
+  [WIDGET_KEY]: {
+    async get(monitor, { settings, language = 'en' }) {
+      const { tv, gone } = selectedTv(monitor, settings);
+      if (!tv) {
+        return {
+          ttl_seconds: TTL_SECONDS,
+          components: [
+            { type: 'text', variant: 'body', text: t(gone ? TEXT.gone : TEXT.empty, language) },
+          ],
+        };
+      }
+      const view = monitor.view(tv);
+      const components = [
+        {
+          type: 'status',
+          items: [{ label: truncate(tv.name, 40), icon: 'tv', ...statusValue(view, language) }],
+        },
+        {
+          type: 'button',
+          label: t(TEXT.write, language),
+          icon: 'edit-3',
+          style: 'secondary',
+          action: {
+            key: 'write',
+            params: { tv: tv.id },
+            fields: [
+              { key: 'message', type: 'string', required: true, label: TEXT.message },
               {
-                label: { en: 'Plug connection', fr: 'Connexion de la prise' },
-                icon: 'wifi',
-                ...plugConnectionStatus(gladys, config),
-              },
-              {
-                label: { en: 'Observed location', fr: 'Position observée' },
-                icon: 'map-pin',
-                value: `${config.latitude.toFixed(2)}, ${config.longitude.toFixed(2)}`,
-                color: WIDGET_COLORS.NEUTRAL,
+                key: 'duration',
+                type: 'select',
+                required: true,
+                default: '10',
+                label: TEXT.duration,
+                options: WRITE_DURATIONS.map((value) => ({
+                  value,
+                  label: Object.fromEntries(
+                    Object.entries(TEXT.seconds).map(([lang, unit]) => [lang, `${value} ${unit}`]),
+                  ),
+                })),
               },
             ],
           },
-          // `params` are declared HERE and sent back as-is: the handler never
-          // receives user input (a dashboard can hang on a public wall).
-          {
-            type: 'button',
-            label: { en: 'Identify the light', fr: 'Identifier la lampe' },
-            icon: 'eye',
-            style: 'secondary',
-            action: {
-              key: DEMO_STATUS_ACTIONS.IDENTIFY_LIGHT,
-              params: { device: light.deviceExternalId(gladys) },
-            },
-          },
-        ],
-      };
+        },
+      ];
+      for (const quick of quickMessages(settings)) {
+        components.push({
+          type: 'button',
+          label: truncate(quick.text, MAX_BUTTON_LABEL),
+          icon: 'message-square',
+          style: 'secondary',
+          action: { key: quick.key, params: { tv: tv.id } },
+        });
+      }
+      return { ttl_seconds: TTL_SECONDS, components };
     },
 
-    // Resolve an optional toast (string or multi-language object, ≤ 200
-    // characters). After a successful action the core drops the cached
-    // content and every open dashboard refetches it: no nudge needed.
-    async action(gladys, { actionKey, params, config }) {
-      logger.info(`onWidgetAction <- ${DEMO_STATUS_WIDGET}.${actionKey}`);
-      if (actionKey === DEMO_STATUS_ACTIONS.IDENTIFY_LIGHT) {
-        return identifyDevice(gladys, params.device, config);
+    async action(monitor, { actionKey, params, settings, values }) {
+      const tv = monitor.tvs.get(params?.tv);
+      if (!tv) {
+        return TEXT.gone;
       }
-      // Throwing acks the action as failed: the message reaches the user.
-      throw new Error(`Unknown widget action: ${actionKey}`);
+      let fields;
+      if (actionKey === 'write') {
+        // An older core drops the form and relays the tap without `values`.
+        if (typeof values?.message !== 'string' || !values.message.trim()) {
+          return render(NOTIFY_ERRORS, 'empty');
+        }
+        fields = { message: values.message, duration: values.duration ?? '10', icon: 'info' };
+      } else {
+        const quick = quickMessages(settings).find((entry) => entry.key === actionKey);
+        if (!quick) {
+          return TEXT.noText;
+        }
+        fields = { message: quick.text, icon: 'info' };
+      }
+      const result = await monitor.notify(tv, fields);
+      if (!result.sent) {
+        return render(NOTIFY_ERRORS, result.error, { name: tv.name, status: result.status });
+      }
+      return Object.fromEntries(
+        Object.entries(TEXT.shown).map(([language, start]) => [language, `${start}${tv.name}`]),
+      );
     },
   },
 };
-
-/**
- * Freshness nudge: ask the core to re-pull every widget NOW instead of
- * waiting for the content TTL. Call it when you KNOW a computed content
- * changed (here: the config, which drives the plug transport and the observed
- * location) — and after every (re)connection, since the nudges are
- * fire-and-forget: rate-limited core-side to 1 per 10 s per widget, dropped
- * silently while disconnected.
- */
-export function refreshWidgets(gladys) {
-  for (const key of Object.keys(WIDGETS)) {
-    gladys.requestWidgetRefresh(key);
-  }
-}

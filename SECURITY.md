@@ -30,6 +30,24 @@ Gladys before reporting a problem.
 
 In scope: the code of this repository and the Docker image it publishes.
 
+What the integration handles:
+
+- **Stored in `/data`** (`/data/tvs.json`): the list of TVs the user added —
+  name, address, app and port. No secret, no account, no token.
+- **Credentials of a camera**, when the user writes them in the picture URL of
+  the scene action (`http://user:password@camera/…`): they live in the scene,
+  which every Gladys user can read (the documentation says so and advises a
+  view-only camera account), are sent only to that camera in answer to its
+  Basic or Digest challenge, and are never written to the logs (the logged URL
+  keeps neither the credentials nor the query string).
+- **Network**, from its container, only towards the addresses the user
+  entered: TCP connections to the app port of each TV (the reachability
+  check), one HTTP POST per notification to the TV's app, one HTTP GET per
+  notification to the picture URL (HTTPS certificates of cameras are not
+  verified: LAN cameras use self-signed ones). Answers are size- and
+  time-bounded. Nothing leaves the local network unless the user enters an
+  outside address.
+
 Out of scope: Gladys Assistant itself (see its
 [security policy](https://github.com/GladysAssistant/Gladys/security/policy)),
-and the third-party services and devices the integration talks to.
+the notification apps installed on the TV, and the cameras.
