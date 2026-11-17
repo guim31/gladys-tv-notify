@@ -1,6 +1,6 @@
 {
   "name": "gladys-tv-notify",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "private": true,
   "description": "Gladys Assistant integration: notifications on Android TV, Google TV and Fire TV (Notifications for Android TV, PiPup, TvOverlay).",
   "type": "module",
